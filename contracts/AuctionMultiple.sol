@@ -4,8 +4,6 @@ import "./Auction.sol";
 
 // 1, "something", 1539659548, "0xca35b7d915458ef540ade6068dfe2f44e8fa733c", 3
 // 1, "something", 1539659548, "0x315f80C7cAaCBE7Fb1c14E65A634db89A33A9637", 3
-// dummy commit, testing SSH on a new machine
-// another one, via source tree (not command line)
 
 contract AuctionMultiple is Auction {
 
@@ -47,19 +45,45 @@ contract AuctionMultiple is Auction {
     });    
   }
 
-  function bid() public payable {
+  function() public payable {
+    if (msg.value == 0) {
+      refund();
+    } else {
+      ///////////////////////////////////////////////////////////
+      uint myBidId = contributors[msg.sender];
+      uint insertionBidId;
+      if (myBidId > 0) {
+        Bid memory existingBid = bids[myBidId];
+        existingBid.value = existingBid.value + msg.value;
+        insertionBidId = searchInsertionPoint(existingBid.value, existingBid.next); // no point in searching from tail
+      } else {
+        insertionBidId = searchInsertionPoint(msg.value, TAIL);
+      }
+      ///////////////////////////////////////////////////////////
+
+      bid(insertionBidId);
+    }  
+  }
+
+  function bid(uint insertionBidId) public payable {
+    LogText("1");
+
     require(now < timestampEnd, "cannot bid after the auction ends");
 
+    LogText("timestamp ok");
+
     uint myBidId = contributors[msg.sender];
-    uint insertionBidId;
     
+    LogNumber(myBidId);
+
     if (myBidId > 0) { // sender has already placed bid, we increase the existing one
+
+      LogNumber(myBidId);
         
       Bid storage existingBid = bids[myBidId];
       existingBid.value = existingBid.value + msg.value;
-      if (existingBid.value > bids[existingBid.next].value) { // else do nothing (we are lower than the next one)
-        insertionBidId = searchInsertionPoint(existingBid.value, existingBid.next);
 
+      if (existingBid.prev != insertionBidId) { // else do nothing 
         bids[existingBid.prev].next = existingBid.next;
         bids[existingBid.next].prev = existingBid.prev;
 
@@ -72,11 +96,10 @@ contract AuctionMultiple is Auction {
 
     } else { // bid from this guy does not exist, create a new one
       require(msg.value >= price, "Not much sense sending less than the price, likely an error"); // but it is OK to bid below the cut off bid, some guys may withdraw
-      require(lastBidID < LIMIT, "Due to blockGas limit we limit number of people in the auction to 4000 - round arbitrary number - check test gasLimit folder for more info");
 
       lastBidID++;
 
-      insertionBidId = searchInsertionPoint(msg.value, TAIL);
+      LogNumber(lastBidID);
 
       contributors[msg.sender] = lastBidID;
       accountsList.push(msg.sender);
@@ -134,11 +157,8 @@ contract AuctionMultiple is Auction {
     beneficiary.transfer(sumContributions);
   }
 
-  // We are  starting from TAIL and going upwards
-  // This is to simplify the case of increasing bids (can go upwards, cannot go lower)
-  // NOTE: blockSize gas limit in case of so many bids (wishful thinking)
   function searchInsertionPoint(uint _contribution, uint _startSearch) view public returns (uint) {
-    require(_contribution > bids[_startSearch].value, "your contribution and _startSearch does not make sense, it will search in a wrong direction");
+    require(_contribution > bids[_startSearch].value, "your contribution and _startSearch does not make sense, starting point too high");
 
     Bid memory lowerBid = bids[_startSearch];
     Bid memory higherBid;

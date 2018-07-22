@@ -22,7 +22,7 @@ contract Auction {
   uint public increaseTimeBy = 24 * 60 * 60;
   
 
-  event BidEvent(address indexed bidder, uint value, uint timestamp); // cannot have event and struct with the same name
+  event BidEvent(address bidder, uint value, uint timestamp); // cannot have event and struct with the same name
   event Refund(address indexed bidder, uint value, uint timestamp);
 
   
@@ -49,7 +49,6 @@ contract Auction {
     beneficiary = _beneficiary;
   }
 
-  // Same for all the derived contract, it's the implementation of refund() and bid() that differs
   function() public payable {
     if (msg.value == 0) {
       refund();

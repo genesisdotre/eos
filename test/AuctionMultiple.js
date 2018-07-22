@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */ // Avoid the linter considering truffle elements as undef.
 const AuctionMultiple = artifacts.require('AuctionMultiple.sol')
-const { expectThrow, increaseTime } = require('./helpers')
+const { expectThrow, increaseTime, getTransactionReceipt } = require('./helpers')
 
 contract('AuctionMultiple', function (accounts) {
   let owner = accounts[0]
@@ -402,6 +402,41 @@ contract('AuctionMultiple', function (accounts) {
     await auction.finalize({ from: owner });
     var balanceAfter = await web3.eth.getBalance(beneficiary).toNumber();
     assert.closeTo(balanceBefore + 1e18 + 2e18, balanceAfter, 0.01 * 1e18, "finalized amount is not correct");
+  });
+
+  it('Should use more gas for each transaction, because more things (commparison eperator) happen', async function() {
+    var tx1 = await auction.sendTransaction({ value: 1e18, from: bidderA });
+    var tx2 = await auction.sendTransaction({ value: 2e18, from: bidderB });
+    var tx3 = await auction.sendTransaction({ value: 3e18, from: bidderC });
+    var tx4 = await auction.sendTransaction({ value: 4e18, from: bidderD });
+    var tx5 = await auction.sendTransaction({ value: 5e18, from: bidderE });
+
+    assert.equal(tx2.receipt.gasUsed < tx3.receipt.gasUsed, true, "gas usage normal");
+    assert.equal(tx3.receipt.gasUsed < tx4.receipt.gasUsed, true, "gas usage normal");
+    assert.equal(tx4.receipt.gasUsed < tx5.receipt.gasUsed, true, "gas usage normal");
+  });  
+
+  it('Should use same more gas for some transaction, because same position', async function() {
+    var tx1 = await auction.sendTransaction({ value: 1e18, from: bidderA });
+    var tx2 = await auction.sendTransaction({ value: 2e18, from: bidderB });
+    var tx3 = await auction.sendTransaction({ value: 1.5e18, from: bidderD });
+
+    assert.equal(tx2.receipt.gasUsed, tx3.receipt.gasUsed, "gas usage normal");
+  });
+
+  it('Should use the same transaction gas', async function() {
+    await auction.sendTransaction({ value: 1e18, from: bidderA });
+    await auction.sendTransaction({ value: 1e18, from: bidderB });
+
+
+
+  });
+
+   it('Should use the same transaction gas, when modyfying an existing bid', async function() {
+
+
+
+
   });
 
 
