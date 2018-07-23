@@ -55,7 +55,7 @@ contract AuctionMultiple is Auction {
       if (myBidId > 0) {
         Bid memory existingBid = bids[myBidId];
         existingBid.value = existingBid.value + msg.value;
-        insertionBidId = searchInsertionPoint(existingBid.value, existingBid.next); // no point in searching from tail
+        insertionBidId = searchInsertionPoint(existingBid.value, TAIL); // TODO: no point in searching from tail
       } else {
         insertionBidId = searchInsertionPoint(msg.value, TAIL);
       }
@@ -66,24 +66,15 @@ contract AuctionMultiple is Auction {
   }
 
   function bid(uint insertionBidId) public payable {
-    LogText("1");
-
     require(now < timestampEnd, "cannot bid after the auction ends");
 
-    LogText("timestamp ok");
-
     uint myBidId = contributors[msg.sender];
-    
-    LogNumber(myBidId);
-
     if (myBidId > 0) { // sender has already placed bid, we increase the existing one
-
-      LogNumber(myBidId);
         
       Bid storage existingBid = bids[myBidId];
       existingBid.value = existingBid.value + msg.value;
 
-      if (existingBid.prev != insertionBidId) { // else do nothing 
+      if (myBidId != insertionBidId) { // else do nothing 
         bids[existingBid.prev].next = existingBid.next;
         bids[existingBid.next].prev = existingBid.prev;
 
@@ -92,14 +83,12 @@ contract AuctionMultiple is Auction {
 
         bids[ bids[insertionBidId].next ].prev = myBidId;
         bids[insertionBidId].next = myBidId;
-      } 
+      }
 
     } else { // bid from this guy does not exist, create a new one
       require(msg.value >= price, "Not much sense sending less than the price, likely an error"); // but it is OK to bid below the cut off bid, some guys may withdraw
 
       lastBidID++;
-
-      LogNumber(lastBidID);
 
       contributors[msg.sender] = lastBidID;
       accountsList.push(msg.sender);
@@ -115,7 +104,7 @@ contract AuctionMultiple is Auction {
       bids[insertionBidId].next = lastBidID;
     }
 
-    emit BidEvent(msg.sender, msg.value, now);
+    emit BidEvent(msg.sender, msg.value, now); // we are returning the value that was increased, not the total value of the bid 
   }
 
   function refund(address addr) private {
@@ -191,5 +180,14 @@ contract AuctionMultiple is Auction {
   function getPosition() view public returns(uint) { // shorthand for calling without parameters
     return getPosition(msg.sender);
   }
+
+  function getContribution() view public returns(uint) {
+    return bids[ contributors[msg.sender] ].value;
+    // return getContribution(msg.sender);
+  }
+
+  // function getContribution(address addr) view public returns(uint) {
+  //   return bids[ contributors[addr] ].value;
+  // }
 
 }

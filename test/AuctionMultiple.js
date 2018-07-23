@@ -339,6 +339,21 @@ contract('AuctionMultiple', function (accounts) {
     assert.equal(pos4.toNumber(), 2);
   });
 
+  it('Should correctly tell contribution value', async function() {
+    await auction.sendTransaction({ value: contribution1, from: bidderA });
+    await auction.sendTransaction({ value: contribution2, from: bidderB });
+    await auction.sendTransaction({ value: contribution3, from: bidderC });
+    await auction.sendTransaction({ value: 1e18, from: bidderB });
+
+    var contrib1 = await auction.getContribution.call({from: bidderA});
+    var contrib2 = await auction.getContribution.call({from: bidderB});
+    // var contrib3 = await auction.getContribution.call(bidderC, {from: bidderA}); // XXX
+
+    assert.equal(contrib1, contribution1);
+    assert.equal(contrib2, contribution2 + 1e18);
+    // assert.equal(contrib3, contribution3);
+  });
+
   it('Should not allow witdrawal of currently winning bids (as user and as owner) ', async function() {
     await auction.sendTransaction({ value: contribution1, from: bidderA });
     await auction.sendTransaction({ value: contribution2, from: bidderB });
@@ -425,17 +440,32 @@ contract('AuctionMultiple', function (accounts) {
   });
 
   it('Should use the same transaction gas', async function() {
-    await auction.sendTransaction({ value: 1e18, from: bidderA });
-    await auction.sendTransaction({ value: 1e18, from: bidderB });
+    await auction.sendTransaction({ value: contribution1, from: bidderA });
+    await auction.sendTransaction({ value: contribution2, from: bidderB });
+
+    var insertionPoint = await auction.searchInsertionPoint.call(contribution3, tailBidId);
+    console.log(insertionPoint);
+
+
+    await auction.getContribution.call({ from: bidderA });
+
+    var bidderAbidId = await auction.contributors.call(bidderA);
+
+    // console.log(bidderAbidId);
+
+    var bidderAbid = await auction.bids.call(bidderAbidId);
+
+    // console.log(bidderAbid);
+
+    // var contrib = await auction.getContribution.call({from: bidderA});
+
+    // console.log(contrib);
 
 
 
   });
 
-   it('Should use the same transaction gas, when modyfying an existing bid', async function() {
-
-
-
+  it('Should use the same transaction gas, when modyfying an existing bid', async function() {
 
   });
 
