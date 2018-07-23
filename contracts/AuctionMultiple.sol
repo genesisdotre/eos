@@ -74,7 +74,11 @@ contract AuctionMultiple is Auction {
       Bid storage existingBid = bids[myBidId];
       existingBid.value = existingBid.value + msg.value;
 
-      if (myBidId != insertionBidId) { // else do nothing 
+      if (myBidId != insertionBidId) { // else do nothing, if we are the inserting for the very same position we are already
+
+        require(existingBid.value >= bids[insertionBidId].value, "Insertion point needs to be greater or euqal");
+        require(existingBid.value <= bids[ bids[insertionBidId].next ].value, "Insertion point needs to lower of equal");
+
         bids[existingBid.prev].next = existingBid.next;
         bids[existingBid.next].prev = existingBid.prev;
 
@@ -87,6 +91,8 @@ contract AuctionMultiple is Auction {
 
     } else { // bid from this guy does not exist, create a new one
       require(msg.value >= price, "Not much sense sending less than the price, likely an error"); // but it is OK to bid below the cut off bid, some guys may withdraw
+      require(msg.value >= bids[insertionBidId].value, "Insertion point needs to be greater or euqal");
+      require(msg.value <= bids[ bids[insertionBidId].next ].value, "Insertion point needs to lower of equal");
 
       lastBidID++;
 
