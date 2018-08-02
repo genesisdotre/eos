@@ -24,6 +24,9 @@ contract Auction {
 
   event BidEvent(address bidder, uint value, uint timestamp); // cannot have event and struct with the same name
   event Refund(address indexed bidder, uint value, uint timestamp);
+  event LogNumber(uint number);
+  event LogText(string text);
+  event LogAddress(address addr);
 
   
   modifier onlyOwner { require(owner == msg.sender, "only owner"); _; }
@@ -58,6 +61,7 @@ contract Auction {
   }
 
   function bid() public payable {
+    emit LogText("base class (single)");
     require(now < timestampEnd, "auction has ended"); // sending ether only allowed before the end
 
     if (bids[msg.sender] > 0) { // First we add the bid to an existing bid

@@ -37,6 +37,7 @@ contract('AuctionMultiple', function (accounts) {
     auction = await AuctionMultiple.new(1e18, "item", timestampEnd, beneficiary, 3, {from: owner});
   });
 
+/* 
   it('Should be able to set up the constructor auction', async function() {
     assert.equal(await auction.owner(), owner, 'The owner is not set correctly')
     assert.equal(await auction.description(), "item", 'The description is not set correctly')
@@ -450,6 +451,7 @@ contract('AuctionMultiple', function (accounts) {
     assert.equal(insertionPoint, 2);
   });
 
+*/
 
   it('Should use the same transaction gas', async function() {
 
@@ -463,14 +465,17 @@ contract('AuctionMultiple', function (accounts) {
     await auction.sendTransaction({ value: contribution3, from: bidderC });
     await auction.sendTransaction({ value: contribution4, from: bidderD });
 
-    var insertionPoint = await auction.searchInsertionPoint.call(2.6e18, tailBidId);
-    var tx = await auction.bid(insertionPoint, { value: 2.6e18, from: bidderE });
-    console.log(tx.receipt.gasUsed);
+    var insertionPoint = await auction.searchInsertionPoint.call(2.6e18, tailBidId, { from: bidderE });
+
+    console.log(insertionPoint);
+
+    var tx = await auction.bid(insertionPoint, { value: 1e18, tfrom: bidderE });
+    // console.log(tx.receipt.gasUsed);
 
 
-    var insertionPoint = await auction.searchInsertionPoint.call(1.1e18, tailBidId);
-    var tx = await auction.bid(insertionPoint, { value: 1.1e18, from: bidderF });
-    console.log(tx.receipt.gasUsed);
+    // var insertionPoint = await auction.searchInsertionPoint.call(1.1e18, tailBidId, { from: bidderF });
+    // var tx = await auction.bid(insertionPoint, { value: 1.1e18, from: bidderF });
+    // console.log(tx.receipt.gasUsed);
 
   });
 

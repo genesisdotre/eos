@@ -23,10 +23,6 @@ contract AuctionMultiple is Auction {
   mapping (uint => Bid) public bids; // map bidID to actual Bid structure
   mapping (address => uint) public contributors; // map address to bidID
   
-  event LogNumber(uint number);
-  event LogText(string text);
-  event LogAddress(address addr);
-  
   constructor(uint _price, string _description, uint _timestampEnd, address _beneficiary, uint _howMany) Auction(_price, _description, _timestampEnd, _beneficiary) public {
     require(_howMany > 1, "This auction is suited to multiple items. With 1 item only - use different code. Or remove this 'require' - you've been warned");
     howMany = _howMany;
@@ -66,6 +62,7 @@ contract AuctionMultiple is Auction {
   }
 
   function bid(uint insertionBidId) public payable {
+    emit LogText("derived class (multiple)");
     require(now < timestampEnd, "cannot bid after the auction ends");
 
     uint myBidId = contributors[msg.sender];
